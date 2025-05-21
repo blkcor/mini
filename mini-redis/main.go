@@ -30,7 +30,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-
+		fmt.Println("Received:", value)
 		respWriter.Write(resp.Value{
 			Typ: "string",
 			Str: "OK",
