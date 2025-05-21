@@ -23,6 +23,8 @@ func main() {
 	defer conn.Close()
 	for {
 		respReader := resp.NewResp(conn)
+		respWriter := resp.NewWriter(conn)
+
 		value, err := respReader.Read()
 		if err != nil {
 			fmt.Println(err)
@@ -30,6 +32,9 @@ func main() {
 		}
 		fmt.Println("Received:", value)
 
-		conn.Write([]byte("+OK\r\n"))
+		respWriter.Write(resp.Value{
+			Typ: "string",
+			Str: "OK",
+		})
 	}
 }
