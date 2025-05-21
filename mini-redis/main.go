@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/blkcor/mini-redis/handler"
 	"github.com/blkcor/mini-redis/resp"
 	"net"
+	"strings"
 )
 
 func main() {
@@ -30,10 +32,22 @@ func main() {
 			fmt.Println(err)
 			return
 		}
-		fmt.Println("Received:", value)
-		respWriter.Write(resp.Value{
-			Typ: "string",
-			Str: "OK",
-		})
+		if value.Typ != "array" {
+			fmt.Println("Invalid request, expected array")
+			continue
+		}
+		if len(value.Array) == 0 {
+			fmt.Println("Invalid request, expected array length > 0")
+			continue
+		}
+		command := strings.ToUpper(value.Array[0].Bulk)
+		args := value.Array[1:]
+		handle, ok := handler.Handler[command]
+		if !ok {
+			fmt.Println("Invalid command: ", command)
+			respWriter.Write(resp.Value{Typ: "string", Str: ""})
+			continue
+		}
+		respWriter.Write(handle(args))
 	}
 }

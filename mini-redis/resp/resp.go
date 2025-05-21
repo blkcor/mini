@@ -30,9 +30,9 @@ func (v Value) Marshal() []byte {
 	switch v.Typ {
 	case "string":
 		return v.marshalString()
-	case "Bulk":
+	case "bulk":
 		return v.marshalBulk()
-	case "Array":
+	case "array":
 		return v.marshalArray()
 	case "null":
 		return v.marshalNull()
@@ -128,27 +128,27 @@ func (r *Resp) readInteger() (x int, n int, err error) {
 
 // readArray reads the Array value from the RESP stream
 func (r *Resp) readArray() (Value, error) {
-	v := Value{}
-	v.Typ = "Array"
+	av := Value{}
+	av.Typ = "array"
 	length, _, err := r.readInteger()
 	if err != nil {
 		return Value{}, err
 	}
-	v.Array = make([]Value, 0)
+	av.Array = make([]Value, 0)
 	for i := 0; i < length; i++ {
 		v, err := r.Read()
 		if err != nil {
 			return Value{}, err
 		}
-		v.Array = append(v.Array, v)
+		av.Array = append(av.Array, v)
 	}
-	return v, nil
+	return av, nil
 }
 
 // readBulk reads the Bulk value from the RESP stream
 func (r *Resp) readBulk() (Value, error) {
 	v := Value{}
-	v.Typ = "Bulk"
+	v.Typ = "bulk"
 	length, _, err := r.readInteger()
 	if err != nil {
 		return Value{}, err
