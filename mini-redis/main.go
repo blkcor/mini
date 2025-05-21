@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io"
+	"github.com/blkcor/mini-redis/resp"
 	"net"
-	"os"
 )
 
 func main() {
@@ -23,17 +22,14 @@ func main() {
 	}
 	defer conn.Close()
 	for {
-		buffer := make([]byte, 1024)
-		// 读取客户端发送的数据
-		_, err = conn.Read(buffer)
+		respReader := resp.NewResp(conn)
+		value, err := respReader.Read()
 		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			fmt.Println("error reading from client: ", err.Error())
-			os.Exit(1)
+			fmt.Println(err)
+			return
 		}
-		// 忽略请求 直接返回 +OK
+		fmt.Println("Received:", value)
+
 		conn.Write([]byte("+OK\r\n"))
 	}
 }
