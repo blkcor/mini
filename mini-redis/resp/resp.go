@@ -76,6 +76,7 @@ func (v Value) marshalArray() []byte {
 	return bytes
 }
 
+// marshalError converts Error to bytes
 func (v Value) marshalError() []byte {
 	bytes := make([]byte, 0)
 	bytes = append(bytes, ERROR)
@@ -84,6 +85,7 @@ func (v Value) marshalError() []byte {
 	return bytes
 }
 
+// marshalNull converts Null to bytes
 func (v Value) marshalNull() []byte {
 	return []byte("$-1\r\n")
 }
