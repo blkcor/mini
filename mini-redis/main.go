@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/blkcor/mini-redis/handler"
+	"github.com/blkcor/mini-redis/aof"
 	"github.com/blkcor/mini-redis/resp"
+	"github.com/blkcor/mini-redis/utils"
 	"net"
 	"strings"
 )
@@ -16,6 +17,12 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	aof, err := aof.NewAof("database.aof")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer aof.Close()
 	// 监听客户端连接
 	conn, err := l.Accept()
 	if err != nil {
@@ -23,6 +30,17 @@ func main() {
 		return
 	}
 	defer conn.Close()
+	// 从.aof文件中读取数据
+	err = aof.Read(func(value resp.Value) {
+		_, err := utils.HandleCommand(value)
+		if err != nil {
+			return
+		}
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	for {
 		respReader := resp.NewResp(conn)
 		respWriter := resp.NewWriter(conn)
@@ -41,13 +59,14 @@ func main() {
 			continue
 		}
 		command := strings.ToUpper(value.Array[0].Bulk)
-		args := value.Array[1:]
-		handle, ok := handler.Handler[command]
-		if !ok {
-			fmt.Println("Invalid command: ", command)
+		response, err := utils.HandleCommand(value)
+		if err != nil {
 			respWriter.Write(resp.Value{Typ: "string", Str: ""})
 			continue
 		}
-		respWriter.Write(handle(args))
+		if command == "SET" || command == "HSET" {
+			aof.Write(value)
+		}
+		respWriter.Write(response)
 	}
 }
